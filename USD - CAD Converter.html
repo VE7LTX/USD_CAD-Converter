@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Currency Converter</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #f5f5f5;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-size: 200%; /* Increase font size by 100% */
+        }
+
+        .converter-container {
+            background-color: #1a1a1a;
+            padding: 40px; /* Increased padding */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+            width: 80vw; /* Use 80% of the view width */
+            max-width: 960px; /* Limit max width for very large displays */
+            margin-top: 20px; /* Space from header */
+        }
+
+        input[type="number"], p {
+            margin: 20px 0; /* Increased margin */
+            padding: 16px; /* Increased padding */
+            background: #333;
+            border: 1px solid #555;
+            color: #f5f5f5;
+            border-radius: 4px;
+            width: calc(100% - 40px); /* Calculate width accounting for padding */
+            font-size: 1em; /* Responsive font size */
+        }
+
+        label {
+            color: var(--neon-blue, #0d6efd);
+            display: block; /* Ensure labels are on their own line */
+        }
+
+        .timestamp, .header {
+            color: #aaa;
+            font-size: 0.8em; /* Smaller font size for timestamps and header description */
+        }
+
+        .header {
+            text-align: center;
+            width: 80vw; /* Match width with the converter container */
+            max-width: 960px;
+        }
+
+        .title {
+            font-size: 1.5em; /* Larger font size for title */
+            color: #0d6efd; /* Stylish blue */
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">Matt's "Impact"ful Currency Converter</h1>
+        <p>This Gives Rough Conversions for Estimated Values. Enter amounts in USD or CAD to get real-time currency conversion. Used for quick access to USD CAD conversions while using CRM's etc... Exchange rates are updated hourly.</p>
+    </div>
+    <div class="converter-container">
+        <label for="usd">USD$:</label>
+        <input type="number" id="usd" placeholder="Enter USD$" oninput="convertToCAD(); updateRoundedUSD();">
+
+        <label for="cad">CAD$:</label>
+        <input type="number" id="cad" placeholder="Enter CAD$" oninput="convertToUSD();">
+
+        <p>1 USD = <span id="rate">1.28</span> CAD</p>
+        <p class="timestamp" id="lastUpdated">Last updated: Not yet updated</p>
+        <p>Rounded USD $ Value to the Nearest Tens Place: $<span id="roundedUSD">0</span></p>
+    </div>
+    <script>
+        let exchangeRate = 1.28; // Initial exchange rate
+
+        function fetchExchangeRate() {
+            fetch('https://api.exchangerate-api.com/v4/latest/USD')
+                .then(response => response.json())
+                .then(data => {
+                    exchangeRate = data.rates.CAD;
+                    document.getElementById('rate').textContent = exchangeRate.toFixed(2); // Show more decimals
+                    const now = new Date();
+                    document.getElementById('lastUpdated').textContent = `Last updated: ${now.toLocaleString()}`;
+                })
+                .catch(error => {
+                    console.error('Error fetching exchange rate:', error);
+                    document.getElementById('lastUpdated').textContent = `Failed to update: ${new Date().toLocaleString()}`;
+                });
+        }
+
+        function convertToCAD() {
+            const usd = document.getElementById('usd').value;
+            const cad = (usd * exchangeRate).toFixed(4); // Show more decimals
+            document.getElementById('cad').value = cad;
+            updateRoundedUSD(); // Update rounded USD value when converting
+        }
+
+        function convertToUSD() {
+            const cad = document.getElementById('cad').value;
+            const usd = (cad / exchangeRate).toFixed(4); // Show more decimals
+            document.getElementById('usd').value = usd;
+            updateRoundedUSD(); // Update rounded USD value when converting
+        }
+
+        function updateRoundedUSD() {
+            const usd = parseFloat(document.getElementById('usd').value);
+            const roundedUSD = Math.round(usd / 10) * 10;
+            document.getElementById('roundedUSD').textContent = roundedUSD;
+        }
+
+        // Fetch the exchange rate initially and then every hour
+        fetchExchangeRate();
+        setInterval(fetchExchangeRate, 3600000); // 3600000 milliseconds = 1 hour
+
+    </script>
+</body>
+</html>
